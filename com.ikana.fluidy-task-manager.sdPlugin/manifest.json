@@ -4,18 +4,33 @@
 	"Author": "Ikana",
 	"Actions": [
 		{
-			"Name": "Counter",
-			"UUID": "com.ikana.fluidy-task-manager.increment",
-			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Displays a count, which increments by one on press.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
+			"Name": "Task Display",
+			"UUID": "com.ikana.fluidy-task-manager.task-display",
+			"Icon": "",
+			"Tooltip": "Empty space to Display Task",
 			"Controllers": [
 				"Keypad"
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
-					"TitleAlignment": "middle"
+					"Image": "imgs/tasks/assets/selected",
+					"TitleAlignment": "bottom"
+				}
+			]
+		},
+		{
+			"Name": "Task Fetcher",
+			"UUID": "com.ikana.fluidy-task-manager.task-fetcher",
+			"Icon": "",
+			"Tooltip": "Button to fetch task from API",
+			"PropertyInspectorPath": "ui/task-fetcher.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/tasks/assets/selected",
+					"TitleAlignment": "bottom"
 				}
 			]
 		}

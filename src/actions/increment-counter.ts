@@ -1,4 +1,27 @@
-import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import streamDeck, { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+
+
+//                                     MANIFEST
+		// {
+		// 	"Name": "Counter",
+		// 	"UUID": "com.ikana.fluidy-task-manager.increment",
+		// 	"Icon": "imgs/actions/counter/icon",
+		// 	"Tooltip": "Displays a count, which increments by one on press.",
+		// 	"PropertyInspectorPath": "ui/increment-counter.html",
+		// 	"Controllers": [
+		// 		"Keypad"
+		// 	],
+		// 	"States": [
+		// 		{
+		// 			"Image": "imgs/actions/counter/key",
+		// 			"TitleAlignment": "middle"
+		// 		}
+		// 	]
+		// },
+
+
+
+
 
 /**
  * An example action class that displays a count that increments by one each time the button is pressed.
@@ -29,6 +52,14 @@ export class IncrementCounter extends SingletonAction<CounterSettings> {
 		// Update the current count in the action's settings, and change the title.
 		await ev.action.setSettings(settings);
 		await ev.action.setTitle(`${settings.count}`);
+
+		streamDeck.actions.forEach((action) => {
+			
+			streamDeck.logger.info(action);
+
+			if (action.manifestId == "com.ikana.fluidy-task-manager.counter-display")
+				action.setTitle(`disp : ${settings.count}`);
+		});
 	}
 }
 
