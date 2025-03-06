@@ -33,6 +33,21 @@
 					"TitleAlignment": "bottom"
 				}
 			]
+		},
+		{
+			"Name": "Task Navigator",
+			"UUID": "com.ikana.fluidy-task-manager.task-navigator",
+			"Icon": "",
+			"Tooltip": "Button to navigate in task list",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/tasks/assets/selected",
+					"TitleAlignment": "bottom"
+				}
+			]
 		}
 	],
 	"Category": "fluidy_task_manager",

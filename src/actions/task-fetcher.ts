@@ -177,7 +177,7 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 
 		this.DisplayArray.forEach((element, index) => {
 			element.trackedIndex = index;
-			element.display.setTitle(this.TaskHash.get(this.TaskList[index])?.name ?? "No Task");
+			element.display.setTitle((this.TaskHash.get(this.TaskList[index])?.name ?? "No Task") + " " + index + "/" + this.TaskList.length);
 		});
 	}
 }
