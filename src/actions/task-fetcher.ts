@@ -1,4 +1,4 @@
-import streamDeck, { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import streamDeck, { action, JsonObject, KeyAction, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
 import { NotionService } from "../services/notion-service";
 
 
@@ -7,7 +7,12 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 
 	private notionService = new NotionService();
 
-	private TaskList : Array<TaskData> = [];
+	private TaskList : Array<string> = new Array<string>();
+	private TaskHash : Map<string, TaskData> = new Map<string, TaskData>();
+	private PublicTaskHash : Map<string, PublicTask> = new Map<string, PublicTask>();
+	private ClientSettingsHash : Map<string, ClientSettings> = new Map<string, ClientSettings>();
+
+	private DisplayArray : Array<DisplayWrapper> = new Array<DisplayWrapper>();
 
 	private CLIENT_SETTINGS = "1f8cb586ecd04a9ea05eda6756758fad";
 	private TACHE_PUBLIQUE = "b5f5a55597f144bdb11ce8e55aed261e";
@@ -49,6 +54,29 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 		// await ev.action.setSettings(settings);
 		// await ev.action.setTitle(`${settings.count}`);
 
+		this.TaskList = new Array<string>();
+		this.TaskHash = new Map<string, TaskData>();
+		this.PublicTaskHash  = new Map<string, PublicTask>();
+		this.ClientSettingsHash  = new Map<string, ClientSettings>();
+		this.DisplayArray = new Array<DisplayWrapper>();
+
+
+
+		streamDeck.actions.forEach((action) => {
+			
+			if (action.manifestId == "com.ikana.fluidy-task-manager.task-display" && action.isKey())
+			{
+				const aDisplayWrapper = {
+					trackedIndex: -1,
+					display: action
+				};
+				this.DisplayArray.push(aDisplayWrapper);
+			}
+		});
+
+		streamDeck.logger.info("DisplayArray : ");
+		streamDeck.logger.info(this.DisplayArray.length);
+
 		if (!this.notionService.isInitialized())
 		{
 			streamDeck.logger.info(`INITIALIZING NOTION`);
@@ -63,17 +91,49 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 		}
 		
 		const database_response = await this.notionService.queryDatabase(this.TACHE_INTERNE);
+		const database_response_tache_public = await this.notionService.queryDatabase(this.TACHE_PUBLIQUE);
+		const database_response_client_settings = await this.notionService.queryDatabase(this.CLIENT_SETTINGS);
 
+		// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// ----------------------------------------------------------------------------------- Client Settings -----------------------------------------------------------------------------------
+		// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+		database_response_client_settings.forEach((element: any) => {
+			let aClientSettings: ClientSettings = {
+				client: element.properties.Client.rich_text[0].plain_text,
+				color: element.properties.Couleur.rich_text[0].plain_text
+			};
+
+			this.ClientSettingsHash.set(element.id, aClientSettings);
+		});
+
+		// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// ----------------------------------------------------------------------------------- Tache Public ------------------------------------------------------------------------------------
+		// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+		database_response_tache_public.forEach((element : any) => {
+			let aPublicTask: PublicTask = {
+				name: element.properties.Nom.title[0].plain_text,
+				clientSettings: element.properties["Client settings"].relation.length > 0 ? element.properties["Client settings"].relation[0].id : null
+			};
+			
+			this.PublicTaskHash.set(element.id, aPublicTask);
+		});
+
+		// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// ----------------------------------------------------------------------------------- Tache Interne -----------------------------------------------------------------------------------
+		// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		database_response.forEach((element: any) => {
 
 			let aTask: TaskData = {
-				name: element.properties.Name.title[0].plain_text
+				name: element.properties.Name.title[0].plain_text,
+				idPublicTask: element.properties["Tache publiques"].relation[0].id
 			};
 
 			streamDeck.logger.info(`Name : ${element.properties.Name.title[0].plain_text}`);
-			streamDeck.logger.info(`Responsable : `);
+			// streamDeck.logger.info(`Responsable : `);
 			element.properties.Responsable.people.forEach((person: any) => {
-				
+
 				if (aTask.responsable == null)
 					aTask.responsable = [];
 				aTask.responsable.push({
@@ -81,16 +141,44 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 					name: person.name,
 					email: person.person.email
 				});
-				
-				streamDeck.logger.info(`id          : ${person.id}`);
-				streamDeck.logger.info(`name        : ${person.name}`);
-				streamDeck.logger.info(`email       : ${person.person.email}`);
+
+				// streamDeck.logger.info(`id          : ${person.id}`);
+				// streamDeck.logger.info(`name        : ${person.name}`);
+				// streamDeck.logger.info(`email       : ${person.person.email}`);
 			});
-			streamDeck.logger.info(`_`);
+
+			// "Tache publiques":{"id":"%5DG%3Er","type":"relation","relation":[{"id":"beaecd2c-7854-4b54-850b-99031f7a63f5"}]
+
+			this.TaskHash.set(element.id, aTask);
+			this.TaskList.push(element.id);
+			
+
+			// streamDeck.logger.info("task : PublicTask :");
+			// const temp = this.PublicTaskHash.get(aTask.idPublicTask);
+			// streamDeck.logger.info(temp);
+			
+			// streamDeck.logger.info("task : ClientSettings :");
+			// streamDeck.logger.info(this.ClientSettingsHash.get(temp ? temp.clientSettings : ""));
+			
 		});
 
 		
+		// streamDeck.logger.info("HASH : ");
+		// this.TaskHash.forEach((value, key) => {
+		// 	streamDeck.logger.info(`Key : ${key}`);
+		// 	streamDeck.logger.info(`Value : ${value}`);
+		// });
+
 		// streamDeck.logger.info();
+
+		// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// ----------------------------------------------------------------------------------- Update Display -----------------------------------------------------------------------------------
+		// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+		this.DisplayArray.forEach((element, index) => {
+			element.trackedIndex = index;
+			element.display.setTitle(this.TaskHash.get(this.TaskList[index])?.name ?? "No Task");
+		});
 	}
 }
 
@@ -101,9 +189,26 @@ type ResponsableTask = {
 };
 
 type TaskData = {
-	name?: string;
+	name: string;
 	responsable?: Array<ResponsableTask>;
+	idPublicTask: string;
 };
+
+type PublicTask = {
+	name: string;
+	clientSettings: string;
+}
+type ClientSettings = {
+	client?: string;
+	color?: string;
+};
+
+type DisplayWrapper = {
+	trackedIndex: number;
+	display: KeyAction;
+}
+
+
 
 type FetcherSettings = {
 	isError: boolean;
