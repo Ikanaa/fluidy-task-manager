@@ -7,6 +7,13 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 
 	private notionService = new NotionService();
 
+	private TaskList : Array<TaskData> = [];
+
+	private CLIENT_SETTINGS = "1f8cb586ecd04a9ea05eda6756758fad";
+	private TACHE_PUBLIQUE = "b5f5a55597f144bdb11ce8e55aed261e";
+	private TACHE_INTERNE = "97ce7b0b2f3d4b58a9956d9ca1475fa2";
+
+
 	override onWillAppear(ev: WillAppearEvent<FetcherSettings>): void | Promise<void> {
 
 		ev.payload.settings.isError = false;
@@ -55,10 +62,48 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 			}
 		}
 		
-		streamDeck.logger.info(await this.notionService.queryDatabase("97ce7b0b2f3d4b58a9956d9ca1475fa2"));
+		const database_response = await this.notionService.queryDatabase(this.TACHE_INTERNE);
+
+		database_response.forEach((element: any) => {
+
+			let aTask: TaskData = {
+				name: element.properties.Name.title[0].plain_text
+			};
+
+			streamDeck.logger.info(`Name : ${element.properties.Name.title[0].plain_text}`);
+			streamDeck.logger.info(`Responsable : `);
+			element.properties.Responsable.people.forEach((person: any) => {
+				
+				if (aTask.responsable == null)
+					aTask.responsable = [];
+				aTask.responsable.push({
+					id: person.id,
+					name: person.name,
+					email: person.person.email
+				});
+				
+				streamDeck.logger.info(`id          : ${person.id}`);
+				streamDeck.logger.info(`name        : ${person.name}`);
+				streamDeck.logger.info(`email       : ${person.person.email}`);
+			});
+			streamDeck.logger.info(`_`);
+		});
+
+		
+		// streamDeck.logger.info();
 	}
 }
 
+type ResponsableTask = {
+	id: string;
+	name: string;
+	email: string;
+};
+
+type TaskData = {
+	name?: string;
+	responsable?: Array<ResponsableTask>;
+};
 
 type FetcherSettings = {
 	isError: boolean;

@@ -14,3 +14,4 @@ streamDeck.actions.registerAction(new TaskFetcher());
 
 // Finally, connect to the Stream Deck.
 streamDeck.connect();
+
