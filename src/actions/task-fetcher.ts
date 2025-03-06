@@ -114,7 +114,7 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 		database_response_tache_public.forEach((element : any) => {
 			let aPublicTask: PublicTask = {
 				name: element.properties.Nom.title[0].plain_text,
-				clientSettings: element.properties["Client settings"].relation.length > 0 ? element.properties["Client settings"].relation[0].id : null
+				idClientSettings: element.properties["Client settings"].relation.length > 0 ? element.properties["Client settings"].relation[0].id : null
 			};
 			
 			this.PublicTaskHash.set(element.id, aPublicTask);
@@ -158,7 +158,7 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 			// streamDeck.logger.info(temp);
 			
 			// streamDeck.logger.info("task : ClientSettings :");
-			// streamDeck.logger.info(this.ClientSettingsHash.get(temp ? temp.clientSettings : ""));
+			// streamDeck.logger.info(this.ClientSettingsHash.get(temp ? temp.idClientSettings : ""));
 			
 		});
 
@@ -196,8 +196,9 @@ type TaskData = {
 
 type PublicTask = {
 	name: string;
-	clientSettings: string;
+	idClientSettings: string;
 }
+
 type ClientSettings = {
 	client?: string;
 	color?: string;
@@ -207,8 +208,6 @@ type DisplayWrapper = {
 	trackedIndex: number;
 	display: KeyAction;
 }
-
-
 
 type FetcherSettings = {
 	isError: boolean;
