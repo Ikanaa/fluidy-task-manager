@@ -1,9 +1,11 @@
 import streamDeck, { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import { NotionService } from "../services/notion-service";
 
 
 @action({ UUID: "com.ikana.fluidy-task-manager.task-fetcher" })
 export class TaskFetcher extends SingletonAction<FetcherSettings> {
 
+	private notionService = new NotionService();
 
 	override onWillAppear(ev: WillAppearEvent<FetcherSettings>): void | Promise<void> {
 
@@ -14,8 +16,8 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 
 			if (action.manifestId == "com.ikana.fluidy-task-manager.task-fetcher")
 			{
-				streamDeck.logger.warn(`Testing : ${action.id} with ${ev.action.id}`);
-				streamDeck.logger.warn(action.id != ev.action.id);
+				// streamDeck.logger.warn(`Testing : ${action.id} with ${ev.action.id}`);
+				// streamDeck.logger.warn(action.id != ev.action.id);
 				if (action.id != ev.action.id)
 				{
 					ev.payload.settings.isError = true;
@@ -39,8 +41,21 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 		// // Update the current count in the action's settings, and change the title.
 		// await ev.action.setSettings(settings);
 		// await ev.action.setTitle(`${settings.count}`);
-		
 
+		if (!this.notionService.isInitialized())
+		{
+			streamDeck.logger.info(`INITIALIZING NOTION`);
+			try{
+				this.notionService.initialize({ apiKey: ev.payload.settings.notionApiKey });
+			}
+			catch (error)
+			{
+				streamDeck.logger.warn(`ERRROR CONNECTING NOTION : ${error}`);
+				return;
+			}
+		}
+		
+		streamDeck.logger.info(await this.notionService.queryDatabase("97ce7b0b2f3d4b58a9956d9ca1475fa2"));
 	}
 }
 
