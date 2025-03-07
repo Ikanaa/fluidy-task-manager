@@ -13,7 +13,7 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/tasks/assets/selected",
+					"Image": "",
 					"TitleAlignment": "bottom"
 				}
 			]

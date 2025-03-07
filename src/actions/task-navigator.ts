@@ -12,19 +12,11 @@ export class TaskNavigator extends SingletonAction<NavigatorSettings> {
 
     override async onKeyDown(ev: KeyDownEvent<NavigatorSettings>): Promise<void> {
 
-
-        let fetcher: any;
-        streamDeck.actions.forEach((action) => {
-
-            if (action.manifestId == "com.ikana.fluidy-task-manager.task-fetcher")
-            {
-                // streamDeck.logger.warn(`Testing : ${action.id} with ${ev.action.id}`);
-                // streamDeck.logger.warn(action.id != ev.action.id);
-                //fetcher = action.;
-
-            }
-        });
-
+        const fetcher = TaskFetcher.getInstance();
+        if (fetcher)
+            fetcher.NextTaskOnAllDisplays();
+        else
+            streamDeck.logger.error("No TaskFetcher found");
     }
 }
 

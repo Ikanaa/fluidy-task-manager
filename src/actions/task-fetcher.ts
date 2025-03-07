@@ -5,6 +5,16 @@ import { NotionService } from "../services/notion-service";
 @action({ UUID: "com.ikana.fluidy-task-manager.task-fetcher" })
 export class TaskFetcher extends SingletonAction<FetcherSettings> {
 
+	private static instance: TaskFetcher | null = null;
+
+	constructor() {
+		super();
+		TaskFetcher.instance = this;
+	}
+	public static getInstance(): TaskFetcher | null {
+		return TaskFetcher.instance ?? null;
+	}
+
 	private notionService = new NotionService();
 
 	private TaskList : Array<string> = new Array<string>();
@@ -17,6 +27,27 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 	private CLIENT_SETTINGS = "1f8cb586ecd04a9ea05eda6756758fad";
 	private TACHE_PUBLIQUE = "b5f5a55597f144bdb11ce8e55aed261e";
 	private TACHE_INTERNE = "97ce7b0b2f3d4b58a9956d9ca1475fa2";
+
+	public async NextTaskOnAllDisplays()
+	{
+		this.DisplayArray.forEach(async (displayWrapper) => {
+
+			let index = displayWrapper.trackedIndex + 1;
+			if (index >= this.TaskList.length)
+				index = 0;
+
+			//streamDeck.logger.info(`Index : ${displayWrapper.trackedIndex} is now Index : ${index}`);
+			displayWrapper.trackedIndex = index;
+
+			const aTaskData = this.TaskHash.get(this.TaskList[index]);
+			const aPublicTask = this.PublicTaskHash.get(aTaskData?.idPublicTask ?? "");
+			const aClientSettings = this.ClientSettingsHash.get(aPublicTask?.idClientSettings ?? "");
+			displayWrapper.display.setTitle((aTaskData?.name ?? "No Task") + " " + (index+1) + "/" + this.TaskList.length);
+			//displayWrapper.display.setImage(await layerImages("imgs/tasks/default/" + (aClientSettings?.color ?? ""), "imgs/tasks/assets/selected"));
+			displayWrapper.display.setImage("imgs/tasks/default/" + (aClientSettings?.color ?? ""));
+			// displayWrapper.display.setImage("imgs/tasks/assets/selected");
+		});
+	}
 
 
 	override onWillAppear(ev: WillAppearEvent<FetcherSettings>): void | Promise<void> {
@@ -177,7 +208,11 @@ export class TaskFetcher extends SingletonAction<FetcherSettings> {
 
 		this.DisplayArray.forEach((element, index) => {
 			element.trackedIndex = index;
-			element.display.setTitle((this.TaskHash.get(this.TaskList[index])?.name ?? "No Task") + " " + index + "/" + this.TaskList.length);
+			const aTaskData = this.TaskHash.get(this.TaskList[index]);
+			const aPublicTask = this.PublicTaskHash.get(aTaskData?.idPublicTask ?? "");
+			const aClientSettings = this.ClientSettingsHash.get(aPublicTask?.idClientSettings ?? "");
+			element.display.setTitle((aTaskData?.name ?? "No Task") + " " + (index+1) + "/" + this.TaskList.length);
+			element.display.setImage("imgs/tasks/default/" + (aClientSettings?.color ?? ""));
 		});
 	}
 }
