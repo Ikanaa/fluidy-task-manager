@@ -10,14 +10,8 @@ export class TaskDisplay extends SingletonAction<DisplaySettings> {
 	}
 
 	override async onKeyDown(ev: KeyDownEvent<DisplaySettings>): Promise<void> {
-		// // Update the count from the settings.
+		// TODO Select Task.
 		// const { settings } = ev.payload;
-		// settings.incrementBy ??= 1;
-		// settings.count = (settings.count ?? 0) + settings.incrementBy;
-
-		// // Update the current count in the action's settings, and change the title.
-		// await ev.action.setSettings(settings);
-		// await ev.action.setTitle(`${settings.count}`);
 		
 	}
 }
